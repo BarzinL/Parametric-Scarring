@@ -9,3 +9,8 @@ venv/
 .vscode/
 .idea/
 Parametric-Scarring-docs/
+.zed/
+
+# Claude Code configuration
+CLAUDE.md
+.claude/

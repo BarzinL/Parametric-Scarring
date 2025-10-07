@@ -1,21 +1,21 @@
 {
   "phase1": {
-    "scarred_final_similarity": 0.5147680044174194,
-    "control_final_similarity": 0.1178755834698677,
+    "scarred_final_similarity": 0.5146242380142212,
+    "control_final_similarity": 0.11496400088071823,
     "total_scar_strength": 203.52399444580078
   },
   "phase2": {
-    "scarred_recall_quality": 0.9326460361480713,
-    "control_recall_quality": 0.3264520764350891,
-    "improvement_ratio": 2.856915619384998
+    "scarred_recall_quality": 0.9311270713806152,
+    "control_recall_quality": 0.2985687851905823,
+    "improvement_ratio": 3.1186350267200864
   },
   "phase3": {
     "pattern_recall_qualities": {
-      "pattern_A": 0.8098087310791016,
-      "pattern_B": 0.921822726726532,
-      "pattern_C": 0.8549436926841736
+      "pattern_A": 0.7304511666297913,
+      "pattern_B": 0.9207003712654114,
+      "pattern_C": 0.8544197082519531
     },
-    "average_recall": 0.8621917168299357,
-    "min_recall": 0.8098087310791016
+    "average_recall": 0.8351904153823853,
+    "min_recall": 0.7304511666297913
   }
 }
