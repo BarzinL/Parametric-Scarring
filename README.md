@@ -8,7 +8,7 @@
 
 This repository contains code for experiments demonstrating **parametric scarring**—a memory mechanism where learned patterns are encoded as permanent modifications to the physical parameters governing a reaction-diffusion substrate.
 
-> 🔗 **Blog Post**: [Teaching Patterns to Physics](your-substack-link)  
+> 🔗 **Blog Post**: [Teaching Patterns to Physics](https://open.substack.com/pub/barzinlotfabadi/p/teaching-patterns-to-physics-memory?r=6j66dp&utm_campaign=post&utm_medium=web&showWelcomeOnShare=true)  
 > 📄 **Paper**: Coming soon to arXiv  
 > 👤 **Author**: [Barzin Lotfabadi]([your-linkedin](https://www.linkedin.com/in/barzin-lotfabadi/))
 
