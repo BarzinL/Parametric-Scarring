@@ -1,0 +1,48 @@
+{
+  "phase1": {
+    "phoneme": "a",
+    "scarred_final_similarity": 0.9015525579452515,
+    "control_final_similarity": 0.38032469153404236,
+    "total_scar_strength": 1656.223876953125
+  },
+  "phase2": {
+    "phoneme": "a",
+    "scarred_recall_quality": 0.887826144695282,
+    "control_recall_quality": 0.4516103267669678,
+    "improvement_ratio": 1.9659119645273364
+  },
+  "phase3": {
+    "discrimination_matrix": {
+      "a": {
+        "similarities": {
+          "a": 0.8837112784385681,
+          "i": 0.9054093360900879,
+          "u": 0.873849093914032
+        },
+        "best_match": "i",
+        "correct": false
+      },
+      "i": {
+        "similarities": {
+          "a": 0.8860559463500977,
+          "i": 0.9090509414672852,
+          "u": 0.8764259219169617
+        },
+        "best_match": "i",
+        "correct": true
+      },
+      "u": {
+        "similarities": {
+          "a": 0.8696900606155396,
+          "i": 0.8882368803024292,
+          "u": 0.8656785488128662
+        },
+        "best_match": "i",
+        "correct": false
+      }
+    },
+    "discrimination_accuracy": 0.3333333333333333,
+    "correct_count": 1,
+    "total_tests": 3
+  }
+}

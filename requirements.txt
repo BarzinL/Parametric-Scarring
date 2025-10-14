@@ -1,3 +1,7 @@
 torch
 numpy
 matplotlib
+scipy
+soundfile
+torchaudio
+# librosa  # Optional: only needed for mel-spectrograms

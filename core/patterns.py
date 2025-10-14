@@ -137,26 +137,83 @@ def create_composite_pattern(patterns_list, weights=None):
     return composite
 
 
-def load_audio_pattern(audio_path, target_size=(256, 256), device="cpu"):
-    """
-    Load audio file and convert to spectrogram pattern.
+# ============================================================================
+# AUDIO/PHONEME PATTERN GENERATION (Experiment 1A)
+# ============================================================================
 
-    STUB: Will be implemented for Experiment 1A.
+
+def synthesize_vowel_phoneme(phoneme, duration=0.5, sample_rate=22050):
+    """
+    Synthesize a vowel phoneme using formant frequencies.
+
+    Formants are the resonant frequencies of the vocal tract.
+    Different vowels have characteristic formant patterns.
 
     Args:
-        audio_path: Path to audio file (.wav, .mp3, etc.)
-        target_size: Desired pattern dimensions
-        device: torch.device
+        phoneme: One of 'a', 'i', 'u'
+        duration: Length of sound in seconds
+        sample_rate: Audio sample rate in Hz
 
     Returns:
-        torch.Tensor: Spectrogram as 2D pattern
+        numpy array: Audio signal (1D)
     """
-    # TODO: Implement in audio experiment
-    # 1. Load audio with librosa/torchaudio
-    # 2. Compute mel-spectrogram
-    # 3. Resize to target_size
-    # 4. Normalize to [0, 1]
-    raise NotImplementedError("Audio loading not yet implemented")
+    # Formant frequencies (F1, F2) for vowels
+    # Source: Peterson & Barney (1952) - classic phonetics study
+    formants = {
+        "a": (700, 1200),  # /a/ as in "father"
+        "i": (300, 2300),  # /i/ as in "see"
+        "u": (300, 900),  # /u/ as in "boot"
+    }
+
+    if phoneme not in formants:
+        raise ValueError(f"Unknown phoneme: {phoneme}. Use 'a', 'i', or 'u'")
+
+    f1, f2 = formants[phoneme]
+
+    # Generate time array
+    t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
+
+    # Synthesize as sum of two sine waves (fundamental + second formant)
+    # F1 is stronger (amplitude 1.0), F2 is weaker (amplitude 0.5)
+    signal = np.sin(2 * np.pi * f1 * t) + 0.5 * np.sin(2 * np.pi * f2 * t)
+
+    # Add slight amplitude envelope (fade in/out to avoid clicks)
+    envelope = np.hanning(len(signal))
+    signal = signal * envelope
+
+    # Normalize to [-1, 1]
+    signal = signal / np.max(np.abs(signal))
+
+    return signal
+
+
+def audio_to_spectrogram(audio_signal, sample_rate=22050, n_fft=512, hop_length=256):
+    """
+    Convert audio signal to spectrogram using Short-Time Fourier Transform (STFT).
+
+    Args:
+        audio_signal: 1D numpy array of audio samples
+        sample_rate: Sample rate in Hz
+        n_fft: FFT window size (frequency resolution)
+        hop_length: Hop between windows (time resolution)
+
+    Returns:
+        numpy array: 2D spectrogram (frequency × time), magnitudes only
+    """
+    from scipy import signal as sp_signal
+
+    # Compute STFT
+    frequencies, times, stft = sp_signal.stft(
+        audio_signal, fs=sample_rate, nperseg=n_fft, noverlap=n_fft - hop_length
+    )
+
+    # Get magnitude (discard phase)
+    magnitude = np.abs(stft)
+
+    # Convert to log scale (dB) for better visualization
+    magnitude_db = 20 * np.log10(magnitude + 1e-10)
+
+    return magnitude_db
 
 
 def spectrogram_to_pattern(spectrogram, target_size=(256, 256), device="cpu"):
@@ -190,6 +247,65 @@ def spectrogram_to_pattern(spectrogram, target_size=(256, 256), device="cpu"):
     pattern = (pattern - pattern.min()) / (pattern.max() - pattern.min() + 1e-8)
 
     return pattern.to(device)
+
+
+def create_phoneme_pattern(phoneme, target_size=(256, 256), device="cpu", duration=0.5):
+    """
+    Generate a phoneme and convert to substrate-compatible pattern.
+
+    This is the main entry point for Experiment 1A.
+
+    Args:
+        phoneme: One of 'a', 'i', 'u'
+        target_size: Desired pattern dimensions
+        device: torch.device
+        duration: Phoneme duration in seconds
+
+    Returns:
+        tuple: (pattern tensor, audio signal, sample_rate)
+    """
+    # Synthesize audio
+    audio_signal = synthesize_vowel_phoneme(phoneme, duration)
+    sample_rate = 22050
+
+    # Convert to spectrogram
+    spectrogram = audio_to_spectrogram(audio_signal, sample_rate)
+
+    # Convert to pattern
+    pattern = spectrogram_to_pattern(spectrogram, target_size, device)
+
+    # Return pattern + audio (for playback/saving)
+    return pattern, audio_signal, sample_rate
+
+
+def load_audio_pattern(audio_path, target_size=(256, 256), device="cpu"):
+    """
+    Load audio file and convert to spectrogram pattern.
+
+    Args:
+        audio_path: Path to audio file (.wav, .mp3, etc.)
+        target_size: Desired pattern dimensions
+        device: torch.device
+
+    Returns:
+        torch.Tensor: Spectrogram as 2D pattern
+    """
+    import soundfile as sf
+
+    # Load audio file
+    audio_signal, sample_rate = sf.read(audio_path)
+
+    # If stereo, convert to mono
+    if len(audio_signal.shape) > 1:
+        audio_signal = audio_signal.mean(axis=1)
+
+    # Convert to spectrogram
+    spectrogram = audio_to_spectrogram(audio_signal, sample_rate)
+
+    # Convert to pattern
+    pattern = spectrogram_to_pattern(spectrogram, target_size, device)
+
+    return pattern
 
 
 def pattern_to_spectrogram(pattern, original_shape=None):
