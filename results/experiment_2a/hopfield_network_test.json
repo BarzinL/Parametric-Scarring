@@ -1,0 +1,52 @@
+{
+  "substrate_info": {
+    "type": "HopfieldSubstrate",
+    "size": [
+      128,
+      128
+    ],
+    "time_step": 0,
+    "parameters": {
+      "temperature": 0.5,
+      "dt": 0.1
+    },
+    "substrate_type": "Hopfield Network",
+    "num_neurons": 16384,
+    "temperature": 0.5,
+    "dt": 0.1,
+    "device": "cuda",
+    "num_stored_patterns": 0
+  },
+  "basic_tests": {
+    "initialization": {
+      "state_shape": [
+        128,
+        128
+      ],
+      "state_mean": 0.0008667883230373263,
+      "state_std": 0.1005239486694336
+    },
+    "injection": {
+      "state_mean": 0.28846919536590576,
+      "state_std": 0.19824014604091644,
+      "injection_effect": 0.2944834232330322
+    },
+    "evolution": {
+      "state_mean": 0.00148670538328588,
+      "state_std": 0.00102168507874012,
+      "evolution_effect": 0.2869825065135956
+    },
+    "recall": {
+      "recall_similarity": 0.4929267933964125
+    },
+    "dynamics": {
+      "time_step": 78,
+      "energy": -3.1474207684567546e-09,
+      "mean_activity": 3.898189970641397e-05,
+      "std_activity": 5.425482231657952e-05,
+      "state_change": Infinity,
+      "num_stored_patterns": 3,
+      "converged": false
+    }
+  }
+}

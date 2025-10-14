@@ -4,4 +4,7 @@ matplotlib
 scipy
 soundfile
 torchaudio
+scikit-learn
+seaborn
+pandas
 # librosa  # Optional: only needed for mel-spectrograms

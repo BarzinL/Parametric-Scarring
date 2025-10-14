@@ -475,3 +475,61 @@ def create_circular_region(center, radius, grid_size=(256, 256), device='cuda'):
     mask = (dist < radius)
     
     return mask
+
+
+def generate_phoneme_patterns(size, num_patterns=3):
+    """
+    Generate phoneme patterns for testing.
+    
+    Args:
+        size: Tuple (height, width) for pattern size
+        num_patterns: Number of patterns to generate
+        
+    Returns:
+        List of numpy arrays representing phoneme patterns
+    """
+    patterns = []
+    phonemes = ['a', 'i', 'u']
+    
+    for i in range(min(num_patterns, 3)):
+        phoneme = phonemes[i]
+        pattern, _, _ = create_phoneme_pattern(phoneme, target_size=size)
+        patterns.append(pattern.cpu().numpy())
+    
+    # If more patterns needed, add variations
+    for i in range(3, num_patterns):
+        # Create variations of existing phonemes
+        base_phoneme = phonemes[i % 3]
+        pattern, _, _ = create_phoneme_pattern(base_phoneme, target_size=size)
+        # Add some noise for variation
+        pattern = pattern + torch.randn_like(pattern) * 0.1
+        pattern = torch.clamp(pattern, 0, 1)
+        patterns.append(pattern.cpu().numpy())
+    
+    return patterns
+
+
+def generate_random_patterns(size, num_patterns=5):
+    """
+    Generate random patterns for testing.
+    
+    Args:
+        size: Tuple (height, width) for pattern size
+        num_patterns: Number of patterns to generate
+        
+    Returns:
+        List of numpy arrays representing random patterns
+    """
+    patterns = []
+    
+    for _ in range(num_patterns):
+        pattern = np.random.random(size)
+        # Apply some structure to make it more interesting
+        # Apply Gaussian filter for spatial coherence
+        from scipy import ndimage
+        pattern = ndimage.gaussian_filter(pattern, sigma=5)
+        # Normalize to [0, 1]
+        pattern = (pattern - pattern.min()) / (pattern.max() - pattern.min())
+        patterns.append(pattern)
+    
+    return patterns

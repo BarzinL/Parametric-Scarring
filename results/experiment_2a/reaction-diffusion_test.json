@@ -1,0 +1,56 @@
+{
+  "substrate_info": {
+    "type": "RDSubstrate",
+    "size": [
+      128,
+      128
+    ],
+    "time_step": 0,
+    "parameters": {
+      "default_f": 0.037,
+      "default_k": 0.06,
+      "Du": 0.16,
+      "Dv": 0.08
+    },
+    "substrate_type": "Reaction-Diffusion",
+    "default_f": 0.037,
+    "default_k": 0.06,
+    "Du": 0.16,
+    "Dv": 0.08,
+    "dt": 1.0,
+    "decay_rate": 0.9995,
+    "device": "cuda"
+  },
+  "basic_tests": {
+    "initialization": {
+      "state_shape": [
+        128,
+        128
+      ],
+      "state_mean": 0.0,
+      "state_std": 0.0
+    },
+    "injection": {
+      "state_mean": 0.14423459768295288,
+      "state_std": 0.09912007302045822,
+      "injection_effect": 0.14423459768295288
+    },
+    "evolution": {
+      "state_mean": 0.13958165049552917,
+      "state_std": 0.11878383904695511,
+      "evolution_effect": 0.09427697956562042
+    },
+    "recall": {
+      "recall_similarity": 0.7380187675655896
+    },
+    "dynamics": {
+      "time_step": 50,
+      "stability": true,
+      "scar_divergence": 213.5658416748047,
+      "v_std": 0.1804521232843399,
+      "v_mean": 0.1423628330230713,
+      "u_std": 0.3379194736480713,
+      "u_mean": 0.7169497609138489
+    }
+  }
+}

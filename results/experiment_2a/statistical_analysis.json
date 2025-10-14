@@ -1,0 +1,54 @@
+{
+  "capacity": {
+    "mean": 0.3261386818264355,
+    "std": 0.24150593954584837,
+    "min": 0.0020331065401151148,
+    "max": 0.5814886307614964,
+    "range": 0.5794555242213812,
+    "cv": 0.7405007532175315,
+    "ranking": [
+      "Reaction-Diffusion",
+      "Hopfield Network",
+      "Oscillator Network"
+    ]
+  },
+  "overlap": {
+    "mean": 0.5277828662768574,
+    "std": 0.4108315386371388,
+    "min": -0.001467673995345182,
+    "max": 0.9999996317219537,
+    "range": 1.001467305717299,
+    "cv": 0.7784101472169241,
+    "ranking": [
+      "Hopfield Network",
+      "Reaction-Diffusion",
+      "Oscillator Network"
+    ]
+  },
+  "correlation_length": {
+    "mean": 0.0,
+    "std": 0.0,
+    "min": "0",
+    "max": "0",
+    "range": "0",
+    "cv": 0,
+    "ranking": [
+      "Reaction-Diffusion",
+      "Hopfield Network",
+      "Oscillator Network"
+    ]
+  },
+  "discrimination_accuracy": {
+    "mean": 0.5333333333333333,
+    "std": 0.33993463423951903,
+    "min": 0.2,
+    "max": 1.0,
+    "range": 0.8,
+    "cv": 0.6373774391990982,
+    "ranking": [
+      "Hopfield Network",
+      "Reaction-Diffusion",
+      "Oscillator Network"
+    ]
+  }
+}
