@@ -72,6 +72,9 @@ class GrayScottSubstrate:
         # Initialize chemical concentrations
         self.U = torch.ones(height, width, device=device)
         self.V = torch.zeros(height, width, device=device)
+        
+        # For stability tracking
+        self.v_history = []
 
         # Create coordinate grids (useful for pattern generation)
         self.y_grid, self.x_grid = torch.meshgrid(
@@ -121,6 +124,11 @@ class GrayScottSubstrate:
         # Clamp to valid concentration range [0, 1]
         self.U.clamp_(0, 1)
         self.V.clamp_(0, 1)
+        
+        # Track V field stability
+        self.v_history.append(torch.std(self.V).item())
+        if len(self.v_history) > 100:  # Keep last 100 only
+            self.v_history.pop(0)
 
     def reset_state(self, U_init=None, V_init=None):
         """
@@ -181,3 +189,65 @@ class GrayScottSubstrate:
         f_div = torch.abs(self.F - self.default_f).sum().item()
         k_div = torch.abs(self.K - self.default_k).sum().item()
         return f_div + k_div
+    
+    def is_stable(self, window=50, threshold=0.001):
+        """
+        Check if substrate has reached stable state.
+        
+        Stability defined as: variance in V field standard deviation
+        over last `window` timesteps is below `threshold`.
+        
+        Args:
+            window: Number of recent timesteps to analyze
+            threshold: Variance threshold for stability
+        
+        Returns:
+            bool: True if stable, False otherwise
+        
+        Note: Requires storing recent V states. Add to __init__:
+            self.v_history = []
+        And in simulate_step():
+            self.v_history.append(torch.std(self.V).item())
+            if len(self.v_history) > 100:
+                self.v_history.pop(0)
+        """
+        if not hasattr(self, 'v_history'):
+            return False
+        
+        if len(self.v_history) < window:
+            return False
+        
+        recent_stds = self.v_history[-window:]
+        variance = torch.tensor(recent_stds).var().item()
+        
+        return variance < threshold
+    
+    def reset_to_equilibrium(self, num_steps=1000):
+        """
+        Evolve substrate to equilibrium state (uniform or stable pattern).
+        
+        Initializes to default state and lets dynamics settle.
+        
+        Args:
+            num_steps: Number of timesteps to evolve
+        """
+        # Initialize to default state
+        self.U.fill_(1.0)
+        self.V.fill_(0.0)
+        
+        # Add small perturbation to break symmetry
+        center = (self.width // 2, self.height // 2)
+        radius = 20
+        y, x = torch.meshgrid(
+            torch.arange(self.height, device=self.device),
+            torch.arange(self.width, device=self.device),
+            indexing='ij'
+        )
+        dist = torch.sqrt((x - center[0])**2 + (y - center[1])**2)
+        init_mask = (dist < radius).float()
+        
+        self.V += init_mask * 0.5
+        
+        # Evolve to equilibrium
+        for _ in range(num_steps):
+            self.simulate_step()

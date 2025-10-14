@@ -1,0 +1,63 @@
+{
+  "phase1": {
+    "phoneme": "a",
+    "pattern_std": 0.11583688110113144,
+    "pattern_mean": 0.1712416112422943,
+    "pattern_emerged": true
+  },
+  "phase2": {
+    "similarity_matrix": {
+      "a": {
+        "a": 1.0,
+        "i": 0.8377231955528259,
+        "u": 0.8333487510681152
+      },
+      "i": {
+        "a": 0.8377231955528259,
+        "i": 1.0,
+        "u": 0.828872799873352
+      },
+      "u": {
+        "a": 0.8333487510681152,
+        "i": 0.828872799873352,
+        "u": 1.0
+      }
+    },
+    "off_diagonal_avg": 0.8333149154980978,
+    "patterns_distinct": false
+  },
+  "phase3": {
+    "recall_results": {
+      "a": {
+        "similarities": {
+          "a": 0.8282923698425293,
+          "i": 0.8267900943756104,
+          "u": 0.8270917534828186
+        },
+        "best_match": "a",
+        "correct": true
+      },
+      "i": {
+        "similarities": {
+          "a": 0.8282923698425293,
+          "i": 0.8267900943756104,
+          "u": 0.8270917534828186
+        },
+        "best_match": "a",
+        "correct": false
+      },
+      "u": {
+        "similarities": {
+          "a": 0.8282923698425293,
+          "i": 0.8267900943756104,
+          "u": 0.8270917534828186
+        },
+        "best_match": "a",
+        "correct": false
+      }
+    },
+    "discrimination_accuracy": 0.3333333333333333,
+    "correct_count": 1,
+    "total_tests": 3
+  }
+}

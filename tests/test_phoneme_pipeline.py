@@ -8,7 +8,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import soundfile as sf
 
-sys.path.append(str(Path(__file__).parent))
+sys.path.append(str(Path(__file__).parent.parent))
 
 from core.patterns import (
     create_phoneme_pattern,

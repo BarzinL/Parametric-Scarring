@@ -382,3 +382,96 @@ def create_pattern_set(pattern_types, width, height, device, offsets=None):
         )
 
     return patterns
+
+
+def synthesize_phoneme_audio(phoneme, duration=0.5, sample_rate=44100):
+    """
+    Synthesize raw audio waveform for a phoneme using formant synthesis.
+    
+    Args:
+        phoneme: 'a', 'i', or 'u'
+        duration: Audio length in seconds
+        sample_rate: Sampling rate in Hz
+    
+    Returns:
+        audio: numpy array of shape (num_samples,), range [-1, 1]
+        sample_rate: Sampling rate used
+    
+    Formants (Peterson & Barney 1952):
+    - /a/: F1=700Hz, F2=1200Hz
+    - /i/: F1=300Hz, F2=2300Hz
+    - /u/: F1=300Hz, F2=900Hz
+    """
+    import numpy as np
+    
+    # Formant frequencies (Hz)
+    formants = {
+        'a': [700, 1200],
+        'i': [300, 2300],
+        'u': [300, 900]
+    }
+    
+    if phoneme not in formants:
+        raise ValueError(f"Unknown phoneme: {phoneme}")
+    
+    f1, f2 = formants[phoneme]
+    
+    # Generate time array
+    t = np.linspace(0, duration, int(sample_rate * duration))
+    
+    # Fundamental frequency (pitch)
+    f0 = 120  # Hz (typical male voice)
+    
+    # Carrier (pitch)
+    carrier = np.sin(2 * np.pi * f0 * t)
+    
+    # Formant filters (amplitude modulation)
+    formant1 = np.sin(2 * np.pi * f1 * t) * 0.6
+    formant2 = np.sin(2 * np.pi * f2 * t) * 0.4
+    
+    # Combine with carrier
+    audio = carrier * (formant1 + formant2)
+    
+    # Apply envelope (smooth attack/decay)
+    envelope = np.ones_like(t)
+    attack_samples = int(0.05 * sample_rate)  # 50ms attack
+    decay_samples = int(0.05 * sample_rate)   # 50ms decay
+    
+    envelope[:attack_samples] = np.linspace(0, 1, attack_samples)
+    envelope[-decay_samples:] = np.linspace(1, 0, decay_samples)
+    
+    audio = audio * envelope
+    
+    # Normalize to [-1, 1]
+    audio = audio / np.max(np.abs(audio))
+    
+    return audio, sample_rate
+
+
+def create_circular_region(center, radius, grid_size=(256, 256), device='cuda'):
+    """
+    Create boolean mask for circular region.
+    
+    Args:
+        center: Tuple (x, y) in pixels
+        radius: Radius in pixels
+        grid_size: (height, width) of grid
+        device: torch device
+    
+    Returns:
+        mask: Boolean tensor of shape grid_size
+    """
+    import torch
+    
+    height, width = grid_size
+    y, x = torch.meshgrid(
+        torch.arange(height, device=device),
+        torch.arange(width, device=device),
+        indexing='ij'
+    )
+    
+    cx, cy = center
+    dist = torch.sqrt((x - cx)**2 + (y - cy)**2)
+    mask = (dist < radius)
+    
+    return mask
