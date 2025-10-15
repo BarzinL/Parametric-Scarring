@@ -103,41 +103,67 @@ def measure_correlation_length(substrate, state: Optional[np.ndarray] = None) ->
     if state is None:
         state = substrate.get_state()
     
+    # Ensure state is 2D
+    if state.ndim != 2:
+        return 0.0
+    
+    # Convert to numpy if needed
+    if hasattr(state, 'cpu'):
+        state = state.cpu().numpy()
+    
     # Calculate spatial autocorrelation
     # Use 2D FFT to compute correlation function
     fft_state = np.fft.fft2(state)
     autocorr = np.fft.ifft2(fft_state * np.conj(fft_state)).real
     
     # Normalize
+    if autocorr[0, 0] == 0:
+        return 0.0
     autocorr = autocorr / autocorr[0, 0]
+    
+    # Shift to center
+    autocorr = np.fft.fftshift(autocorr)
     
     # Find correlation length (distance where autocorrelation drops to 1/e)
     center = np.array(autocorr.shape) // 2
     
     # Create radial profile
-    y, x = np.ogrid[:autocorr.shape[0], :autocorr.shape[1]]
+    y, x = np.indices(autocorr.shape)
     r = np.sqrt((x - center[1])**2 + (y - center[0])**2)
     r = r.astype(int)
     
     # Bin by radius
     max_radius = min(center)
     radial_profile = np.zeros(max_radius)
+    counts = np.zeros(max_radius)
     
     for radius in range(max_radius):
         mask = (r == radius)
         if np.any(mask):
             radial_profile[radius] = autocorr[mask].mean()
+            counts[radius] = np.sum(mask)
     
-    # Find correlation length
-    threshold = 1.0 / np.e
-    correlation_length = 0
+    # Find correlation length - first crossing of 1/e threshold
+    threshold = 1.0 / np.e  # ≈ 0.368
     
-    for i, value in enumerate(radial_profile):
-        if value < threshold:
-            correlation_length = i
-            break
+    # Start from radius 1 (skip center point)
+    for i in range(1, len(radial_profile)):
+        if radial_profile[i] < threshold:
+            # Interpolate between this point and previous
+            if i > 1:
+                r1, v1 = i - 1, radial_profile[i - 1]
+                r2, v2 = i, radial_profile[i]
+                # Linear interpolation
+                if v1 != v2:
+                    correlation_length = r1 + (threshold - v1) * (r2 - r1) / (v2 - v1)
+                else:
+                    correlation_length = float(i)
+            else:
+                correlation_length = float(i)
+            return correlation_length
     
-    return correlation_length
+    # If never crosses threshold, return max_radius
+    return float(max_radius)
 
 
 def measure_dynamics(substrate, steps: int = 100) -> Dict[str, float]:
@@ -164,7 +190,11 @@ def measure_dynamics(substrate, steps: int = 100) -> Dict[str, float]:
     
     for _ in range(steps):
         substrate.evolve(steps=1)
-        states.append(substrate.get_state().copy())
+        state = substrate.get_state()
+        # Convert to numpy if tensor
+        if hasattr(state, 'cpu'):
+            state = state.cpu().numpy()
+        states.append(state.copy())
         dynamics_history.append(substrate.get_dynamics())
     
     # Calculate dynamical metrics
@@ -176,25 +206,26 @@ def measure_dynamics(substrate, steps: int = 100) -> Dict[str, float]:
         change = np.mean((states[i] - states[i-1])**2)
         state_changes.append(change)
     
-    convergence_rate = np.mean(state_changes[-10:]) if len(state_changes) > 10 else 0
+    convergence_rate = float(np.mean(state_changes[-10:])) if len(state_changes) > 10 else 0.0
     
     # Measure stability (variance in final states)
-    stability = 1.0 / (1.0 + np.var(states[-10:]) if len(states) > 10 else 1.0)
+    final_variance = float(np.var(states[-10:])) if len(states) > 10 else 1.0
+    stability = float(1.0 / (1.0 + final_variance))
     
     # Measure oscillation frequency (if any)
     if len(states) > 20:
         # Simple frequency estimation using FFT
         mean_activity = [np.mean(state) for state in states]
         fft_activity = np.fft.fft(mean_activity)
-        dominant_freq = np.argmax(np.abs(fft_activity[1:len(fft_activity)//2])) + 1
+        dominant_freq = int(np.argmax(np.abs(fft_activity[1:len(fft_activity)//2])) + 1)
     else:
         dominant_freq = 0
     
     return {
         'convergence_rate': convergence_rate,
         'stability': stability,
-        'dominant_frequency': dominant_freq,
-        'final_state_variance': np.var(states[-10:]) if len(states) > 10 else 0
+        'dominant_frequency': float(dominant_freq),
+        'final_state_variance': float(final_variance)
     }
 
 

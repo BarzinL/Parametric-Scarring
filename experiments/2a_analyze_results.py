@@ -111,6 +111,10 @@ def create_dynamics_comparison(results: Dict[str, Any],
             except (ValueError, TypeError):
                 value = 0.0
             
+            # Handle very small values
+            if value < 1e-15:
+                value = 1e-15
+            
             data.append({
                 'Substrate': substrate,
                 'Property': prop.replace('_', ' ').title(),
@@ -119,14 +123,22 @@ def create_dynamics_comparison(results: Dict[str, Any],
     
     df = pd.DataFrame(data)
     
-    # Use log scale if values span many orders of magnitude
+    # Check if we need log scale (values span > 2 orders of magnitude)
+    value_range = df['Value'].max() / (df['Value'].min() + 1e-15)
+    use_log_scale = value_range > 100
+    
+    # Create grouped bar plot
     plt.figure(figsize=(12, 6))
     ax = sns.barplot(data=df, x='Property', y='Value', hue='Substrate')
-
-    # Create grouped bar plot
+    
+    if use_log_scale:
+        ax.set_yscale('log')
+        plt.ylabel('Value (log scale)', fontsize=12)
+    else:
+        plt.ylabel('Value', fontsize=12)
+    
     plt.title('Dynamical Properties Comparison', fontsize=16)
     plt.xlabel('Property', fontsize=12)
-    plt.ylabel('Value', fontsize=12)
     plt.xticks(rotation=45)
     plt.legend(title='Substrate')
     plt.tight_layout()
