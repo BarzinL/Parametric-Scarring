@@ -14,3 +14,9 @@ Parametric-Scarring-docs/
 # Claude Code configuration
 CLAUDE.md
 .claude/
+
+# Kilocode and MCP server stuff
+.kilocode/
+.kilocode/mcp.json
+.mcp-bridge/
+tree.md
