@@ -13,6 +13,7 @@ from typing import Dict, List, Any
 import base64
 from io import BytesIO
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 
 def load_results(results_file: str) -> Dict[str, Any]:
@@ -102,6 +103,10 @@ def generate_html_report(results: Dict[str, Any],
         if os.path.exists(image_path):
             images[image_file] = image_to_base64(image_path)
     
+    # Check if this is a phoneme experiment
+    is_phoneme_exp = 'pattern_type' in results['parameters'] and results['parameters']['pattern_type'] == 'phoneme'
+    experiment_title = "Experiment 2A-Rev1: Phoneme-Based Comparative Substrate Analysis" if is_phoneme_exp else "Experiment 2A: Comparative Substrate Analysis"
+    
     # Generate HTML
     html = f"""
 <!DOCTYPE html>
@@ -109,7 +114,7 @@ def generate_html_report(results: Dict[str, Any],
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Experiment 2A: Comparative Substrate Analysis</title>
+    <title>{experiment_title}</title>
     <style>
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -216,15 +221,47 @@ def generate_html_report(results: Dict[str, Any],
 </head>
 <body>
     <div class="container">
-        <h1>Experiment 2A: Comparative Substrate Analysis</h1>
+        <h1>{experiment_title}</h1>
         
         <div class="highlight">
             <h3>Experiment Overview</h3>
             <p><strong>Date:</strong> {results['timestamp']}</p>
             <p><strong>Objective:</strong> Compare different computational substrates (Reaction-Diffusion, Hopfield Network, and Oscillator Network) to test whether discrimination performance is determined by abstract properties rather than physical implementation.</p>
+            <p><strong>Test Data:</strong> {'Phoneme patterns (/a/, /i/, /u/) with tonotopic frequency mapping' if is_phoneme_exp else 'Generic geometric patterns'}</p>
             <p><strong>Substrate Size:</strong> {results['parameters']['size'][0]} × {results['parameters']['size'][1]}</p>
             <p><strong>Test Patterns:</strong> {results['parameters']['num_patterns']}</p>
         </div>
+        
+        {f'''
+        <h2>Phoneme Specifications</h2>
+        <table>
+            <tr>
+                <th>Phoneme</th>
+                <th>F1 (Hz)</th>
+                <th>F2 (Hz)</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>/a/</td>
+                <td>700</td>
+                <td>1200</td>
+                <td>Open vowel (as in "father")</td>
+            </tr>
+            <tr>
+                <td>/i/</td>
+                <td>300</td>
+                <td>2300</td>
+                <td>Close front vowel (as in "see")</td>
+            </tr>
+            <tr>
+                <td>/u/</td>
+                <td>300</td>
+                <td>900</td>
+                <td>Close back vowel (as in "boot")</td>
+            </tr>
+        </table>
+        <p><em>Formant frequencies from Peterson & Barney (1952)</em></p>
+        ''' if is_phoneme_exp else ''}
 
         <h2>Key Findings</h2>
         <div class="highlight">
@@ -561,14 +598,32 @@ def generate_markdown_report(results: Dict[str, Any],
     highest_capacity = max(substrates, key=lambda x: results['results'][x].get('capacity', 0))
     best_discrimination = max(substrates, key=lambda x: results['results'][x].get('discrimination_accuracy', 0))
     
-    markdown = f"""# Experiment 2A: Comparative Substrate Analysis
+    # Check if this is a phoneme experiment
+    is_phoneme_exp = 'pattern_type' in results['parameters'] and results['parameters']['pattern_type'] == 'phoneme'
+    experiment_title = "Experiment 2A-Rev1: Phoneme-Based Comparative Substrate Analysis" if is_phoneme_exp else "Experiment 2A: Comparative Substrate Analysis"
+    
+    markdown = f"""# {experiment_title}
 
 ## Overview
 
 **Date:** {results['timestamp']}
 **Objective:** Compare different computational substrates to test whether discrimination performance is determined by abstract properties rather than physical implementation.
+**Test Data:** {'Phoneme patterns (/a/, /i/, /u/) with tonotopic frequency mapping' if is_phoneme_exp else 'Generic geometric patterns'}
 **Substrate Size:** {results['parameters']['size'][0]} × {results['parameters']['size'][1]}
 **Test Patterns:** {results['parameters']['num_patterns']}
+
+{'''
+## Phoneme Specifications
+
+| Phoneme | F1 (Hz) | F2 (Hz) | Description |
+|---------|---------|---------|-------------|
+| /a/ | 700 | 1200 | Open vowel (as in "father") |
+| /i/ | 300 | 2300 | Close front vowel (as in "see") |
+| /u/ | 300 | 900 | Close back vowel (as in "boot") |
+
+*Formant frequencies from Peterson & Barney (1952)*
+
+''' if is_phoneme_exp else ''}
 
 ## Key Findings
 
@@ -632,7 +687,39 @@ This experiment demonstrates that the choice of computational substrate signific
                 markdown += f"- **{param}:** {value}\n"
         markdown += "\n"
     
+    # Add comparison to 1A results if available and this is a phoneme experiment
+    if is_phoneme_exp:
+        markdown += """
+
+## Comparison to Experiment 1A
+
+"""
+        # Check if 1A results exist
+        exp_1a_path = Path("results/experiment_1a_rev2/results.json")
+        if exp_1a_path.exists():
+            with open(exp_1a_path, 'r') as f:
+                exp_1a = json.load(f)
+            
+            rd_2a_acc = results['results'].get('Reaction-Diffusion', {}).get('discrimination_accuracy', None)
+            rd_1a_acc = exp_1a.get('phase3', {}).get('discrimination_accuracy', None)
+            
+            if rd_2a_acc and rd_1a_acc:
+                markdown += f"""
+**RD Substrate Performance**:
+- Experiment 1A-Rev2 (standalone): {rd_1a_acc:.1%}
+- Experiment 2A-Rev1 (comparative): {rd_2a_acc:.1%}
+- Difference: {(rd_2a_acc - rd_1a_acc):.1%}
+
+"""
+                if abs(rd_2a_acc - rd_1a_acc) < 0.1:
+                    markdown += "✓ Results are **consistent** across experiments.\n"
+                else:
+                    markdown += "⚠ Results show **significant difference** - investigate methodology.\n"
+        else:
+            markdown += "*Experiment 1A results not available for comparison.*\n"
+    
     markdown += f"""
+
 *Report generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*
 """
     

@@ -216,43 +216,58 @@ class OscillatorSubstrate(ComputationalSubstrate):
             'mean_frequency': torch.mean(self.natural_frequencies).item()
         }
     
-    def store_pattern(self, pattern: np.ndarray, label: str = "") -> None:
+    def store_pattern_spatial(self, pattern: np.ndarray, label: str = "") -> None:
         """
-        Store a pattern by modifying natural frequencies.
+        Store a 2D spatial pattern by converting to frequency representation.
         
         Args:
-            pattern: Pattern to store
-            label: Optional label for the pattern
+            pattern: 2D numpy array
+            label: Pattern label
         """
-        # Convert pattern to torch tensor
-        if isinstance(pattern, np.ndarray):
-            pattern_tensor = torch.from_numpy(pattern).float().to(self.device)
-        else:
-            pattern_tensor = pattern
+        # Flatten pattern
+        flat = pattern.flatten()
+        
+        # Take FFT to get frequency components
+        fft = np.fft.fft(flat)
+        freqs = np.fft.fftfreq(len(flat))
+        
+        # Map frequency components to oscillator natural frequencies
+        # Each oscillator responds to its resonant frequency
+        
+        # Reset oscillators
+        self.reset()
+        
+        # Drive oscillators based on spectral content
+        for i in range(self.height * self.width):
+            # Find closest frequency in pattern spectrum
+            target_freq = self.natural_frequencies.flatten()[i].item() / (2 * np.pi)  # Convert to Hz
             
-        # Ensure correct shape
-        if pattern_tensor.shape != (self.height, self.width):
-            pattern_tensor = F.interpolate(
-                pattern_tensor.unsqueeze(0).unsqueeze(0),
-                size=(self.height, self.width),
-                mode='bilinear',
-                align_corners=False
-            ).squeeze()
+            # Find power at this frequency
+            freq_idx = np.argmin(np.abs(freqs - target_freq))
+            power = np.abs(fft[freq_idx])
+            
+            # Set initial oscillator amplitude based on power
+            flat_i = i % (self.height * self.width)
+            self.phases.flatten()[flat_i] = torch.tensor(power * 0.01, device=self.device)  # Scale down
         
-        # Store pattern by modifying natural frequencies
-        # Higher pattern values increase natural frequency
-        freq_modification = pattern_tensor * 0.2
-        self.natural_frequencies += freq_modification
+        # Let oscillators couple and settle
+        self.stabilize(n_steps=500)
+    
+    def stabilize(self, n_steps: int = 500) -> None:
+        """
+        Let the oscillator network stabilize.
         
-        # Clamp frequencies to reasonable range
-        freq_min, freq_max = self.natural_freq_range
-        self.natural_frequencies.clamp_(freq_min * 0.5, freq_max * 1.5)
-        
-        # Store pattern for reference
-        self.stored_patterns.append({
-            'pattern': pattern_tensor.cpu().numpy(),
-            'label': label
-        })
+        Args:
+            n_steps: Number of evolution steps for stabilization
+        """
+        self.evolve(steps=n_steps)
+
+    def store_pattern(self, pattern: np.ndarray, label: str = "") -> None:
+        """Override to handle spatial patterns."""
+        if isinstance(pattern, np.ndarray) and pattern.ndim == 2:
+            self.store_pattern_spatial(pattern, label)
+        else:
+            super().store_pattern(pattern, label)
     
     def recall_pattern(self, cue: np.ndarray) -> np.ndarray:
         """

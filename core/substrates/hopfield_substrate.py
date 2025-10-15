@@ -169,35 +169,47 @@ class HopfieldSubstrate(ComputationalSubstrate):
             'converged': state_change < 0.001
         }
     
-    def store_pattern(self, pattern: np.ndarray, label: str = "") -> None:
+    def store_pattern_direct(self, pattern: np.ndarray, label: str = "") -> None:
         """
-        Store a pattern using Hebbian learning.
+        Store a pattern directly (e.g., from generate_phoneme_patterns).
         
         Args:
-            pattern: Pattern to store
-            label: Optional label for the pattern
+            pattern: 2D numpy array (will be flattened)
+            label: Pattern label
         """
-        # Convert and flatten pattern
-        if isinstance(pattern, np.ndarray):
-            pattern_tensor = torch.from_numpy(pattern).float().to(self.device)
-        else:
-            pattern_tensor = pattern
-            
-        pattern_flat = pattern_tensor.flatten()
-        if len(pattern_flat) != self.num_neurons:
-            pattern_flat = F.interpolate(
-                pattern_tensor.unsqueeze(0).unsqueeze(0),
-                size=(self.height, self.width),
-                mode='bilinear',
-                align_corners=False
-            ).flatten()
+        # Flatten pattern
+        flat_pattern = torch.tensor(pattern.flatten(), device=self.device, dtype=torch.float32)
         
+        # Normalize to [-1, 1]
+        flat_pattern = (flat_pattern - flat_pattern.mean()) / (flat_pattern.std() + 1e-10)
+        flat_pattern = torch.tanh(flat_pattern)
+        
+        # Resize to network size if needed
+        if len(flat_pattern) != self.num_neurons:
+            # Interpolate to correct size
+            from torch.nn.functional import interpolate
+            flat_pattern = interpolate(
+                flat_pattern.unsqueeze(0).unsqueeze(0),
+                size=self.num_neurons,
+                mode='linear'
+            ).squeeze()
+        
+        # Train pattern
+        self._train_pattern(flat_pattern)
+    
+    def _train_pattern(self, pattern: torch.Tensor) -> None:
+        """
+        Train the network on a pattern using Hebbian learning.
+        
+        Args:
+            pattern: Flattened pattern tensor
+        """
         # Normalize pattern
-        pattern_flat = pattern_flat / torch.norm(pattern_flat)
+        pattern = pattern / torch.norm(pattern)
         
         # Hebbian learning: W = W + (1/N) * p * p^T
         # Remove self-connections
-        outer_product = torch.outer(pattern_flat, pattern_flat)
+        outer_product = torch.outer(pattern, pattern)
         self.weights += outer_product / self.num_neurons
         
         # Zero out diagonal (no self-connections)
@@ -205,9 +217,18 @@ class HopfieldSubstrate(ComputationalSubstrate):
         
         # Store pattern for reference
         self.stored_patterns.append({
-            'pattern': pattern_flat.cpu().numpy(),
-            'label': label
+            'pattern': pattern.cpu().numpy(),
+            'label': ""
         })
+
+    def store_pattern(self, pattern: np.ndarray, label: str = "") -> None:
+        """Override base class to handle both audio and direct patterns."""
+        if isinstance(pattern, np.ndarray) and pattern.ndim == 2:
+            # Direct 2D pattern (e.g., from generate_phoneme_patterns)
+            self.store_pattern_direct(pattern, label)
+        else:
+            # Audio pattern - use existing inject_audio method
+            super().store_pattern(pattern, label)
     
     def recall_pattern(self, cue: np.ndarray) -> np.ndarray:
         """

@@ -31,30 +31,30 @@
         128,
         128
       ],
-      "state_mean": 0.004468277096748352,
-      "state_std": 0.7102755308151245
+      "state_mean": 0.007232243660837412,
+      "state_std": 0.7085195183753967
     },
     "injection": {
-      "state_mean": 0.0012056140694767237,
-      "state_std": 0.7083339691162109,
-      "injection_effect": 0.5223854780197144
+      "state_mean": 0.009594574570655823,
+      "state_std": 0.7056509256362915,
+      "injection_effect": 0.5219544172286987
     },
     "evolution": {
-      "state_mean": -0.00127708213403821,
-      "state_std": 0.7051142454147339,
-      "evolution_effect": 0.3159506916999817
+      "state_mean": 0.009650006890296936,
+      "state_std": 0.704474925994873,
+      "evolution_effect": 0.31517884135246277
     },
     "recall": {
-      "recall_similarity": 0.005377309619033169
+      "recall_similarity": 0.0010620299443625649
     },
     "dynamics": {
-      "time_step": 10000,
-      "order_parameter": 0.00399537431076169,
-      "mean_phase": -2.937995672225952,
-      "phase_variance": 3.2716329097747803,
+      "time_step": 10500,
+      "order_parameter": 0.028277676552534103,
+      "mean_phase": -1.6755893230438232,
+      "phase_variance": 3.2919228076934814,
       "synchronized": false,
-      "num_stored_patterns": 3,
-      "mean_frequency": 1.1736664772033691
+      "num_stored_patterns": 0,
+      "mean_frequency": 0.9990267753601074
     }
   }
 }

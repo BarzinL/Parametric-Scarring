@@ -459,6 +459,114 @@ def create_summary_plot(results: Dict[str, Any],
     plt.close()
 
 
+def add_phoneme_specific_analysis(results: Dict[str, Any],
+                                 output_dir: str = "results/experiment_2a") -> None:
+    """
+    Add phoneme-specific analysis to the results.
+    
+    Args:
+        results: Experiment results dictionary
+        output_dir: Directory to save plots
+    """
+    print("\n" + "="*70)
+    print("PHONEME-SPECIFIC ANALYSIS")
+    print("="*70 + "\n")
+    
+    # Check if this is a phoneme experiment
+    if 'pattern_type' not in results['parameters'] or results['parameters']['pattern_type'] != 'phoneme':
+        print("Not a phoneme experiment - skipping phoneme-specific analysis")
+        return
+    
+    phonemes = results['parameters'].get('phonemes', ['a', 'i', 'u'])
+    
+    # Analyze which phonemes are hardest to discriminate
+    for substrate_name in results['results']:
+        if 'discrimination' in results['results'][substrate_name] and 'matrix' in results['results'][substrate_name]['discrimination']:
+            disc_matrix = results['results'][substrate_name]['discrimination']['matrix']
+            
+            print(f"\n{substrate_name}:")
+            for phoneme in phonemes:
+                if phoneme in disc_matrix:
+                    result = disc_matrix[phoneme]
+                    sims = result['similarities']
+                    correct = result['correct']
+                    
+                    # Find most confused phoneme
+                    other_phonemes = [p for p in phonemes if p != phoneme]
+                    max_confusion = max(sims[p] for p in other_phonemes)
+                    confused_with = max(other_phonemes, key=lambda p: sims[p])
+                    
+                    status = "✓" if correct else f"✗ (→ /{confused_with}/)"
+                    print(f"  /{phoneme}/: {status} (max confusion: {max_confusion:.3f} with /{confused_with}/)")
+    
+    # Create phoneme confusion matrix visualization
+    create_phoneme_confusion_matrices(results, output_dir)
+
+
+def create_phoneme_confusion_matrices(results: Dict[str, Any],
+                                    output_dir: str = "results/experiment_2a") -> None:
+    """
+    Create confusion matrices for phoneme discrimination.
+    
+    Args:
+        results: Experiment results dictionary
+        output_dir: Directory to save plots
+    """
+    # Check if this is a phoneme experiment
+    if 'pattern_type' not in results['parameters'] or results['parameters']['pattern_type'] != 'phoneme':
+        return
+    
+    phonemes = results['parameters'].get('phonemes', ['a', 'i', 'u'])
+    substrates = list(results['results'].keys())
+    
+    # Create figure with subplots for each substrate
+    fig, axes = plt.subplots(1, len(substrates), figsize=(5*len(substrates), 5))
+    if len(substrates) == 1:
+        axes = [axes]
+    
+    for i, substrate_name in enumerate(substrates):
+        ax = axes[i]
+        
+        # Create confusion matrix
+        confusion_matrix = np.zeros((len(phonemes), len(phonemes)))
+        
+        if 'discrimination' in results['results'][substrate_name] and 'matrix' in results['results'][substrate_name]['discrimination']:
+            disc_matrix = results['results'][substrate_name]['discrimination']['matrix']
+            
+            for j, target_phoneme in enumerate(phonemes):
+                if target_phoneme in disc_matrix:
+                    result = disc_matrix[target_phoneme]
+                    if result['correct']:
+                        confusion_matrix[j, j] = 1  # Correct classification
+                    else:
+                        # Find confused phoneme
+                        similarities = result['similarities']
+                        other_phonemes = [p for p in phonemes if p != target_phoneme]
+                        confused_with = max(other_phonemes, key=lambda p: similarities[p])
+                        k = phonemes.index(confused_with)
+                        confusion_matrix[j, k] = similarities[confused_with]
+        
+        # Plot heatmap
+        im = ax.imshow(confusion_matrix, cmap='Blues', vmin=0, vmax=1)
+        ax.set_xticks(range(len(phonemes)))
+        ax.set_yticks(range(len(phonemes)))
+        ax.set_xticklabels([f'/{p}/' for p in phonemes])
+        ax.set_yticklabels([f'/{p}/' for p in phonemes])
+        ax.set_xlabel('Predicted')
+        ax.set_ylabel('Target')
+        ax.set_title(f'{substrate_name} Phoneme Confusion')
+        
+        # Add text annotations
+        for j in range(len(phonemes)):
+            for k in range(len(phonemes)):
+                text = ax.text(k, j, f'{confusion_matrix[j, k]:.2f}',
+                             ha="center", va="center", color="black")
+    
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}/phoneme_confusion_matrices.png", dpi=300)
+    plt.close()
+
+
 def main():
     """Main function to analyze results."""
     # Load results
@@ -474,6 +582,9 @@ def main():
     
     # Create comprehensive report
     create_comprehensive_report(results)
+    
+    # Add phoneme-specific analysis if applicable
+    add_phoneme_specific_analysis(results)
     
     print("\nAnalysis complete!")
     print("Check the results/experiment_2a directory for all visualization files.")

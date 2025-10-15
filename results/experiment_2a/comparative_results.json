@@ -1,15 +1,21 @@
 {
-  "timestamp": "2025-10-14T06:11:54.815217",
+  "timestamp": "2025-10-15T01:26:06.062191",
   "parameters": {
     "size": [
       128,
       128
     ],
-    "num_patterns": 5,
+    "num_patterns": 3,
     "substrate_types": [
       "Reaction-Diffusion",
       "Hopfield Network",
       "Oscillator Network"
+    ],
+    "pattern_type": "phoneme",
+    "phonemes": [
+      "a",
+      "i",
+      "u"
     ]
   },
   "substrate_info": {
@@ -19,7 +25,7 @@
         128,
         128
       ],
-      "time_step": 250,
+      "time_step": 150,
       "parameters": {
         "default_f": 0.037,
         "default_k": 0.06,
@@ -41,7 +47,7 @@
         128,
         128
       ],
-      "time_step": 386,
+      "time_step": 227,
       "parameters": {
         "temperature": 0.5,
         "dt": 0.1
@@ -51,7 +57,7 @@
       "temperature": 0.5,
       "dt": 0.1,
       "device": "cuda",
-      "num_stored_patterns": 5
+      "num_stored_patterns": 3
     },
     "Oscillator Network": {
       "type": "OscillatorSubstrate",
@@ -59,7 +65,7 @@
         128,
         128
       ],
-      "time_step": 50000,
+      "time_step": 20510,
       "parameters": {
         "coupling_strength": 0.1,
         "natural_freq_range": [
@@ -77,39 +83,39 @@
       "dt": 0.01,
       "coupling_radius": 3,
       "device": "cuda",
-      "num_stored_patterns": 5
+      "num_stored_patterns": 0
     }
   },
   "results": {
     "Reaction-Diffusion": {
-      "capacity": 0.5814886307614964,
-      "overlap": 0.5848166411039639,
-      "correlation_length": 0,
-      "convergence_rate": "5.809387e-14",
-      "stability": "1.0",
-      "dominant_frequency": "1",
-      "final_state_variance": "4.3626908e-13",
-      "discrimination_accuracy": 0.4
+      "capacity": 0.7418708224339751,
+      "overlap": 0.5964913130997745,
+      "correlation_length": 64.0,
+      "convergence_rate": 5.96435945879499e-14,
+      "stability": 0.9999999999995548,
+      "dominant_frequency": 1.0,
+      "final_state_variance": 4.450918800191772e-13,
+      "discrimination_accuracy": 0.6666666666666666
     },
     "Hopfield Network": {
-      "capacity": 0.39489430817769505,
-      "overlap": 0.9999996317219537,
-      "correlation_length": 0,
-      "convergence_rate": "8.9259803e-14",
-      "stability": "1.0",
-      "dominant_frequency": "1",
-      "final_state_variance": "2.2550854e-12",
+      "capacity": 0.4986736300065733,
+      "overlap": 0.9999999781172404,
+      "correlation_length": 64.0,
+      "convergence_rate": 9.02260647380089e-14,
+      "stability": 0.9999999999977383,
+      "dominant_frequency": 1.0,
+      "final_state_variance": 2.261730299574216e-12,
       "discrimination_accuracy": 1.0
     },
     "Oscillator Network": {
-      "capacity": 0.0020331065401151148,
-      "overlap": -0.001467673995345182,
-      "correlation_length": 0,
-      "convergence_rate": "5.0044648e-05",
-      "stability": "0.66453093",
-      "dominant_frequency": "1",
-      "final_state_variance": "0.5048208",
-      "discrimination_accuracy": 0.2
+      "capacity": 0.0023660222663467226,
+      "overlap": -0.393018293259749,
+      "correlation_length": 18.36958052446373,
+      "convergence_rate": 5.121081994730048e-05,
+      "stability": 0.6683697519512475,
+      "dominant_frequency": 1.0,
+      "final_state_variance": 0.4961778223514557,
+      "discrimination_accuracy": 0.3333333333333333
     }
   },
   "test_patterns_info": [
@@ -121,7 +127,8 @@
       "mean": 0.28846919536590576,
       "std": 0.19824014604091644,
       "min": 0.0,
-      "max": 1.0
+      "max": 1.0,
+      "label": "a"
     },
     {
       "shape": [
@@ -131,7 +138,8 @@
       "mean": 0.32367873191833496,
       "std": 0.1984976977109909,
       "min": 0.0,
-      "max": 1.0
+      "max": 1.0,
+      "label": "i"
     },
     {
       "shape": [
@@ -141,27 +149,8 @@
       "mean": 0.25685369968414307,
       "std": 0.19597327709197998,
       "min": 0.0,
-      "max": 1.0
-    },
-    {
-      "shape": [
-        128,
-        128
-      ],
-      "mean": 0.5215656979008179,
-      "std": 0.14139637103204467,
-      "min": 0.0,
-      "max": 1.0
-    },
-    {
-      "shape": [
-        128,
-        128
-      ],
-      "mean": 0.4891873618885462,
-      "std": 0.14517956017768716,
-      "min": 0.0,
-      "max": 1.0
+      "max": 1.0,
+      "label": "u"
     }
   ]
 }

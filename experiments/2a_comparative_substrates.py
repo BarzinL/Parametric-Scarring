@@ -13,10 +13,12 @@ from datetime import datetime
 from typing import Dict, List, Any, Tuple
 
 # Import substrates
-from core.substrates import RDSubstrate, HopfieldSubstrate, OscillatorSubstrate
+from core.substrates.rd_substrate import RDSubstrate
+from core.substrates.hopfield_substrate import HopfieldSubstrate
+from core.substrates.oscillator_substrate import OscillatorSubstrate
 
 # Import analysis tools
-from core.analysis import compare_substrates, measure_substrate_properties
+from core.analysis.properties import compare_substrates, measure_substrate_properties
 
 # Import pattern generation
 from core.patterns import generate_phoneme_patterns, generate_random_patterns
@@ -25,6 +27,7 @@ from core.patterns import generate_phoneme_patterns, generate_random_patterns
 def create_test_patterns(size: Tuple[int, int], num_patterns: int = 5) -> List[np.ndarray]:
     """
     Create test patterns for the experiment.
+    NOW USING PHONEME PATTERNS ONLY.
     
     Args:
         size: Size of patterns (height, width)
@@ -33,18 +36,11 @@ def create_test_patterns(size: Tuple[int, int], num_patterns: int = 5) -> List[n
     Returns:
         List of test patterns
     """
-    patterns = []
-    
-    # Generate phoneme patterns
+    # Generate phoneme patterns using existing function
     phoneme_patterns = generate_phoneme_patterns(size)
-    patterns.extend(phoneme_patterns[:3])  # Use first 3 phoneme patterns
     
-    # Generate random patterns for remaining
-    if num_patterns > 3:
-        random_patterns = generate_random_patterns(size, num_patterns - 3)
-        patterns.extend(random_patterns)
-    
-    return patterns[:num_patterns]
+    # Should return 3 patterns for /a/, /i/, /u/
+    return phoneme_patterns[:num_patterns]
 
 
 def setup_substrates(size: Tuple[int, int]) -> Dict[str, Any]:
@@ -86,7 +82,7 @@ def setup_substrates(size: Tuple[int, int]) -> Dict[str, Any]:
     return substrates
 
 
-def run_comparative_experiment(size: Tuple[int, int] = (128, 128), 
+def run_comparative_experiment(size: Tuple[int, int] = (128, 128),
                               num_patterns: int = 5,
                               output_dir: str = "results/experiment_2a") -> Dict[str, Any]:
     """
@@ -100,7 +96,7 @@ def run_comparative_experiment(size: Tuple[int, int] = (128, 128),
     Returns:
         Dictionary containing experiment results
     """
-    print("Starting Experiment 2A: Comparative Substrate Analysis")
+    print("Starting Experiment 2A-Rev1: Phoneme-Based Comparative Substrate Analysis")
     print(f"Substrate size: {size}")
     print(f"Number of patterns: {num_patterns}")
     print(f"Output directory: {output_dir}")
@@ -112,11 +108,15 @@ def run_comparative_experiment(size: Tuple[int, int] = (128, 128),
     print("\nGenerating test patterns...")
     test_patterns = create_test_patterns(size, num_patterns)
     
-    # Save test patterns
-    for i, pattern in enumerate(test_patterns):
+    # Define phoneme labels
+    PHONEME_LABELS = ['a', 'i', 'u']
+    labels = PHONEME_LABELS[:len(test_patterns)]
+    
+    # Save test patterns with phoneme labels
+    for i, (pattern, label) in enumerate(zip(test_patterns, labels)):
         plt.figure(figsize=(6, 6))
         plt.imshow(pattern, cmap='viridis')
-        plt.title(f"Test Pattern {i+1}")
+        plt.title(f"Phoneme /{label}/ Pattern")
         plt.colorbar()
         plt.savefig(f"{output_dir}/test_pattern_{i+1}.png")
         plt.close()
@@ -140,7 +140,9 @@ def run_comparative_experiment(size: Tuple[int, int] = (128, 128),
         'parameters': {
             'size': size,
             'num_patterns': num_patterns,
-            'substrate_types': list(substrates.keys())
+            'substrate_types': list(substrates.keys()),
+            'pattern_type': 'phoneme',  # NEW
+            'phonemes': PHONEME_LABELS[:num_patterns]  # NEW
         },
         'substrate_info': substrate_info,
         'results': results,
@@ -150,9 +152,10 @@ def run_comparative_experiment(size: Tuple[int, int] = (128, 128),
                 'mean': float(np.mean(pattern)),
                 'std': float(np.std(pattern)),
                 'min': float(np.min(pattern)),
-                'max': float(np.max(pattern))
+                'max': float(np.max(pattern)),
+                'label': label  # NEW
             }
-            for pattern in test_patterns
+            for pattern, label in zip(test_patterns, labels)
         ]
     }
     
@@ -273,9 +276,9 @@ def test_individual_substrate(substrate_name: str, size: Tuple[int, int] = (128,
 
 def main():
     """Main function to run the experiment."""
-    # Set up parameters
+    # Set up parameters - using only 3 phoneme patterns
     size = (128, 128)
-    num_patterns = 5
+    num_patterns = 3  # Changed to 3 for phonemes /a/, /i/, /u/
     output_dir = "results/experiment_2a"
     
     # Test individual substrates first
@@ -296,7 +299,7 @@ def main():
         print("✓ Comparative experiment completed successfully")
         
         # Print summary
-        print("\nExperiment Summary:")
+        print("\nExperiment 2A-Rev1 Summary (Phoneme Patterns):")
         for substrate_name, properties in results['results'].items():
             print(f"\n{substrate_name}:")
             print(f"  Capacity: {properties['capacity']:.3f}")
